@@ -5,14 +5,12 @@
 #include <cstdio>
 
 class FlyBehavior {
-
 public:
   virtual void fly() = 0;
 };
 
 
 class FlyWithWings : public FlyBehavior {
-
 public:
   void fly() {
     printf("I'm flying!\n");
@@ -21,7 +19,6 @@ public:
 
 
 class FlyNoWay : public FlyBehavior {
-
 public:
   void fly() {
     printf("I can't fly!\n");
@@ -29,7 +26,6 @@ public:
 };
 
 class FlyRocketPowered : public FlyBehavior {
-
 public:
   void fly() {
     printf("I'm flying with a rocket!\n");
@@ -37,14 +33,12 @@ public:
 };
 
 class QuackBehavior {
-
 public:
   virtual void quack() = 0;
 };
 
 
 class Quack : public QuackBehavior {
-
 public:
   void quack() {
     printf("Quack!\n");
@@ -53,7 +47,6 @@ public:
 
 
 class MuteQuack : public QuackBehavior {
-
 public:
   void quack() {
     printf("<< Silence >>\n");
@@ -62,7 +55,6 @@ public:
 
 
 class Squeak : public QuackBehavior {
-
 public:
   void quack() {
     printf("Squeak!\n");
@@ -71,7 +63,6 @@ public:
 
 
 class Duck {
-
 public:
   ~Duck() {
     if(flyBehavior)
@@ -111,9 +102,7 @@ protected:
   QuackBehavior* quackBehavior;
 };
 
-
 class MallardDuck : public Duck {
-
 public:
   MallardDuck() {
     quackBehavior = new Quack();
@@ -126,7 +115,6 @@ public:
 };
 
 class ModelDuck : public Duck {
-
 public:
   ModelDuck() {
     flyBehavior = new FlyNoWay();
