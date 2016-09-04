@@ -5,16 +5,43 @@
 #include <cstdio>
 #include <list>
 
+class Observable;
+
 class Observer {
 public:
-  virtual void update(float temp, float humidity, float pressure) = 0;
+  virtual ~Observer() {}
+  virtual void update(Observable* observable) = 0;
 };
 
-class Subject {
+class Observable {
 public:
-  virtual void registerObserver(Observer* o) = 0;
-  virtual void removeObserver(Observer* o) = 0;
-  virtual void notifyObservers() = 0;
+  virtual ~Observable() {
+    for(auto it = observers.begin(); it != observers.end(); ++it)
+      delete *it;
+  }
+  
+  void addObserver(Observer* o) {
+    observers.push_back(o);
+  }
+  
+  void removeObserver(Observer* o) {
+    observers.remove(o);
+  }
+  
+  void notifyObservers() {
+    if(changed)
+      for(auto it = observers.begin(); it != observers.end(); ++it)
+        (*it)->update(this);
+    changed = false;
+  }
+
+  void setChanged() {
+    changed = true;
+  }
+  
+private:
+  std::list<Observer*> observers;
+  bool changed;
 };
 
 class DisplayElement {
@@ -22,23 +49,10 @@ public:
   virtual void display() = 0;
 };
 
-class WeatherData : public Subject {
+class WeatherData : public Observable {
 public:
-  void registerObserver(Observer* o) {
-    observers.push_back(o);
-  }
-
-  void removeObserver(Observer* o) {
-    observers.remove(o);
-  }
-
-  void notifyObservers() {
-    for(auto it = observers.begin(); it != observers.end(); ++it) {
-      (*it)->update(temperature, humidity, pressure);
-    }
-  }
-
   void measurementsChanged() {
+    setChanged();
     notifyObservers();
   }
 
@@ -49,8 +63,19 @@ public:
     measurementsChanged();
   }
 
+  float getTemperature() {
+    return temperature;
+  }
+
+  float getHumidity() {
+    return humidity;
+  }
+
+  float getPressure() {
+    return pressure;
+  }
+
 private:
-  std::list<Observer*> observers;
   float temperature;
   float humidity;
   float pressure;
@@ -58,15 +83,12 @@ private:
 
 class CurrentConditionsDisplay : public Observer, public DisplayElement {
 public:
-  CurrentConditionsDisplay(Subject* weatherData) {
-    this->weatherData = weatherData;
-    weatherData->registerObserver(this);
-  }
-
-  void update(float temperature, float humidity, float) {
-    this->temperature = temperature;
-    this->humidity = humidity;
-    display();
+  void update(Observable* observable) {
+    if(WeatherData* weatherData = dynamic_cast<WeatherData*>(observable)) {
+      this->temperature = weatherData->getTemperature();
+      this->humidity = weatherData->getHumidity();
+      display();
+    }
   }
 
   void display() {
@@ -76,20 +98,16 @@ public:
 private:
   float temperature;
   float humidity;
-  Subject* weatherData;
 };
 
 class HeatIndexDisplay : public Observer, public DisplayElement {
 public:
-  HeatIndexDisplay(Subject* weatherData) {
-    this->weatherData = weatherData;
-    weatherData->registerObserver(this);
-  }
-
-  void update(float temperature, float humidity, float) {
-    this->temperature = temperature;
-    this->humidity = humidity;
-    display();
+  void update(Observable* observable) {
+    if(WeatherData* weatherData = dynamic_cast<WeatherData*>(observable)) {
+      this->temperature = weatherData->getTemperature();
+      this->humidity = weatherData->getHumidity();
+      display();
+    }
   }
 
   void display() {
@@ -109,21 +127,44 @@ private:
   }
   float temperature;
   float humidity;
-  Subject* weatherData;
+};
+
+class ForecastDisplay : public Observer, public DisplayElement {
+public:
+  void update(Observable* observable) {
+    if(WeatherData* weatherData = dynamic_cast<WeatherData*>(observable)) {
+      lastPressure = currentPressure;
+      currentPressure = weatherData->getPressure();
+      display();
+    }
+  }
+
+  void display() {
+    float delta = (lastPressure - currentPressure) / currentPressure * 100;
+    if(delta < -1)
+      printf("Forecast: Watch out for cooler, rainy weather\n");
+    else if(delta > 1)
+      printf("Forecast: Improving weather on the way!\n");
+    else
+      printf("Forecast: More of the same\n");
+  }
+  
+private:
+  float currentPressure { 29.92 };
+  float lastPressure;
 };
 
 int main() {
   WeatherData* weatherData = new WeatherData();
-  CurrentConditionsDisplay* currentDisplay = new CurrentConditionsDisplay(weatherData);
-  HeatIndexDisplay* heatIndexDisplay = new HeatIndexDisplay(weatherData);
-
+  weatherData->addObserver(new CurrentConditionsDisplay());
+  weatherData->addObserver(new HeatIndexDisplay());
+  weatherData->addObserver(new ForecastDisplay());
+  
   weatherData->setMeasurements(80.0, 65.0, 30.4);
   weatherData->setMeasurements(82.0, 70.0, 29.2);
   weatherData->setMeasurements(78.0, 90.0, 29.2);
 
   delete weatherData;
-  delete currentDisplay;
-  delete heatIndexDisplay;
   
   return 0;
 }
