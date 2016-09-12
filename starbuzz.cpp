@@ -3,13 +3,14 @@
  * Decorator pattern example
  */
 #include <cstdio>
+#include <memory>
 #include <string>
 
 class Beverage {
 public:
   virtual ~Beverage() {}
   
-  std::string getDescription() {
+  virtual std::string getDescription() {
     return description;
   }
 
@@ -18,8 +19,8 @@ public:
   std::string description { "Unknown description" };
 };
 
-class CondimentDecorator : public virtual Beverage {
-  virtual std::string getDescription() = 0;
+class CondimentDecorator : public Beverage {
+  virtual std::string getDescription() override = 0;
 };
 
 class Espresso : public Beverage {
@@ -68,17 +69,9 @@ public:
 
 class Mocha : public CondimentDecorator {
 public:
-  Mocha(Beverage* beverage) {
-    this->beverage = beverage;
-    printf("%s\n", beverage->getDescription().c_str());
-  }
-
-  ~Mocha() {
-    delete beverage;
-  }
+  Mocha(Beverage* beverage) : beverage(beverage) {}
 
   std::string getDescription() {
-    printf("zvezda\n");
     return beverage->getDescription() + ", Mocha";
   }
 
@@ -87,18 +80,12 @@ public:
   }
 
 private:
-  Beverage* beverage;
+  std::unique_ptr<Beverage> beverage;
 };
 
 class Soy : public CondimentDecorator {
 public:
-  Soy(Beverage* beverage) {
-    this->beverage = beverage;
-  }
-  
-  ~Soy() {
-    delete beverage;
-  }
+  Soy(Beverage* beverage) : beverage(beverage) {}
   
   std::string getDescription() {
     return beverage->getDescription() + ", Soy";
@@ -109,18 +96,12 @@ public:
   }
 
 private:
-  Beverage* beverage;
+  std::unique_ptr<Beverage> beverage;
 };
 
 class Whip : public CondimentDecorator {
 public:
-  Whip(Beverage* beverage) {
-    this->beverage = beverage;
-  }
-
-  ~Whip() {
-    delete beverage;
-  }
+  Whip(Beverage* beverage) : beverage(beverage) {}
 
   std::string getDescription() {
     return beverage->getDescription() + ", Whip";
@@ -131,17 +112,17 @@ public:
   }
 
 private:
-  Beverage* beverage;
+  std::unique_ptr<Beverage> beverage;
 }; 
 
 int main() {
-  Beverage* beverage = new Espresso();
+  std::unique_ptr<Beverage> beverage { std::make_unique<Espresso>() };
   printf("%s $%f\n", beverage->getDescription().c_str(), beverage->cost());
 
-  Beverage* beverage2 = new DarkRoast();
-  beverage2 = new Mocha(beverage2);
-  //beverage2 = new Mocha(beverage2);
-  //beverage2 = new Whip(beverage2);
+  std::unique_ptr<Beverage> beverage2 { new Whip { new Mocha { new Mocha { new DarkRoast() }}}};
   printf("%s $%f\n", beverage2->getDescription().c_str(), beverage2->cost());
+
+  std::unique_ptr<Beverage> beverage3 { new Whip { new Mocha { new Soy { new HouseBlend() }}}};
+  printf("%s $%f\n", beverage3->getDescription().c_str(), beverage3->cost());
   return 0;
 }
