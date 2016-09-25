@@ -10,103 +10,126 @@
 
 class Ingredient {
 public:
-  Ingredient(const std::) : name(str) {}
+  Ingredient(const char* str) : name(str) {}
   
   virtual ~Ingredient() {};
   
-  std::string getName() {
-    return name;
+  const std::string toString() {
+    return std::string(name);
   }
   
 private:
-  std::string name;
+  const char* name;
 };
 
-class Dough {};
-class Sauce {};
-class Veggie {};
-class Cheese {};
-class Pepperoni {};
-class Clams {};
-
-class ThinCrustDough : public Dough, public Ingredient {
+class Dough : public Ingredient {
 public:
-  ThinCrustDough() : Ingredient("thin crust dough") {}
+  Dough(const char* str) : Ingredient(str) {}
 };
 
-class ThickCrustDough : public Dough, public Ingredient {
+class Sauce : public Ingredient {
 public:
-  ThickCrustDough() : Ingredient("thick crust dough") {}
+  Sauce(const char* str) : Ingredient(str) {}
 };
 
-class MarinaraSauce : public Sauce, public Ingredient {
+class Veggie : public Ingredient {
 public:
-  MarinaraSauce() : Ingredient("marinara sauce") {}
+  Veggie(const char* str) : Ingredient(str) {}
 };
 
-class PlumTomatoSauce : public Sauce, public Ingredient {
+class Cheese : public Ingredient {
 public:
-  PlumTomatoSauce() : Ingredient("plum tomato sauce") {}
+  Cheese(const char* str) : Ingredient(str) {}
 };
 
-class Garlic : public Veggie, public Ingredient {
+class Pepperoni : public Ingredient {
 public:
-  Garlic() : Ingredient("garlic") {}
+  Pepperoni(const char* str) : Ingredient(str) {}
 };
 
-class Onion : public Veggie, public Ingredient {
+class Clams : public Ingredient {
 public:
-  Onion() : Ingredient("onion") {}
+  Clams(const char* str) : Ingredient(str) {}
 };
 
-class Mushroom : public Veggie, public Ingredient {
+class ThinCrustDough : public Dough {
 public:
-  Mushroom() : Ingredient("mushroom") {}
+  ThinCrustDough() : Dough("thin crust dough") {}
 };
 
-class RedPepper : public Veggie, public Ingredient {
+class ThickCrustDough : public Dough {
 public:
-  RedPepper() : Ingredient("red pepper") {}
+  ThickCrustDough() : Dough("thick crust dough") {}
 };
 
-class BlackOlives : public Veggie, public Ingredient {
+class MarinaraSauce : public Sauce {
 public:
-  BlackOlives() : Ingredient("black olives") {}
+  MarinaraSauce() : Sauce("marinara sauce") {}
 };
 
-class EggPlant : public Veggie, public Ingredient {
+class PlumTomatoSauce : public Sauce {
 public:
-  EggPlant() : Ingredient("egg plant") {}
+  PlumTomatoSauce() : Sauce("plum tomato sauce") {}
 };
 
-class Spinach : public Veggie, public Ingredient {
+class Garlic : public Veggie {
 public:
-  Spinach() : Ingredient("spinach") {}
+  Garlic() : Veggie("garlic") {}
 };
 
-class ReggianoCheese : public Cheese, public Ingredient {
+class Onion : public Veggie {
 public:
-  ReggianoCheese() : Ingredient("reggiano cheese") {}
+  Onion() : Veggie("onion") {}
 };
 
-class MozzarellaCheese : public Cheese, public Ingredient {
+class Mushroom : public Veggie {
 public:
-  MozzarellaCheese() : Ingredient("mozzarella cheese") {}
+  Mushroom() : Veggie("mushroom") {}
 };
 
-class SlicedPepperoni : public Pepperoni, public Ingredient {
+class RedPepper : public Veggie {
 public:
-  SlicedPepperoni() : Ingredient("sliced pepperoni") {}
+  RedPepper() : Veggie("red pepper") {}
 };
 
-class FreshClams : public Clams, public Ingredient {
+class BlackOlives : public Veggie {
 public:
-  FreshClams() : Ingredient("fresh clams") {}
+  BlackOlives() : Veggie("black olives") {}
 };
 
-class FrozenClams : public Clams, public Ingredient {
+class EggPlant : public Veggie {
 public:
-  FrozenClams() : Ingredient("frozen clams") {}
+  EggPlant() : Veggie("egg plant") {}
+};
+
+class Spinach : public Veggie {
+public:
+  Spinach() : Veggie("spinach") {}
+};
+
+class ReggianoCheese : public Cheese {
+public:
+  ReggianoCheese() : Cheese("reggiano cheese") {}
+};
+
+class MozzarellaCheese : public Cheese {
+public:
+  MozzarellaCheese() : Cheese("mozzarella cheese") {}
+};
+
+class SlicedPepperoni : public Pepperoni {
+public:
+  SlicedPepperoni() : Pepperoni("sliced pepperoni") {}
+};
+
+class FreshClams : public Clams {
+public:
+  FreshClams() : Clams("fresh clams") {}
+};
+
+class FrozenClams : public Clams {
+public:
+  FrozenClams() : Clams("frozen clams") {}
 };
 
 class Pizza {
@@ -115,16 +138,16 @@ public:
   
   virtual void prepare() = 0;
 
-  void bake() {
-    printf("Bake for 25 minutes at 350\n");
+  virtual void bake() {
+    std::cout << "Bake for 25 minutes at 350" << std::endl;
   }
 
-  void cut() {
-    printf("Cutting the pizza into diagonal slices\n");
+  virtual void cut() {
+    std::cout << "Cutting the pizza into diagonal slices" << std::endl;
   }
 
-  void box() {
-    printf("Place pizza in official PizzaStore box\n");
+  virtual void box() {
+    std::cout << "Place pizza in official PizzaStore box" << std::endl;
   }
 
   std::string getName() {
@@ -175,7 +198,15 @@ public:
     this->clams = std::unique_ptr<Clams>(clams);
   }
 
-  virtual void toString() = 0;
+  std::vector<std::unique_ptr<Veggie> >& getVeggies() {
+    return veggies;
+  }
+
+  void setVeggies(std::vector<std::unique_ptr<Veggie> > veggies) {
+    this->veggies = std::move(veggies);
+  }
+
+  virtual std::string toString() = 0;
 
 private:
   std::string name;
@@ -213,10 +244,10 @@ public:
 
   std::vector<std::unique_ptr<Veggie> > createVeggies() {
     std::vector<std::unique_ptr<Veggie> > veggies;
-    veggies.push_back(std::unique_ptr<Veggie>(new Garlic()));
-    veggies.push_back(std::unique_ptr<Veggie>(new Onion()));
-    veggies.push_back(std::unique_ptr<Veggie>(new Mushroom()));
-    veggies.push_back(std::unique_ptr<Veggie>(new RedPepper()));
+    veggies.emplace_back(new Garlic());
+    veggies.emplace_back(new Onion());
+    veggies.emplace_back(new Mushroom());
+    veggies.emplace_back(new RedPepper());
     return veggies;
   }
 
@@ -245,9 +276,9 @@ public:
 
   std::vector<std::unique_ptr<Veggie> > createVeggies() {
     std::vector<std::unique_ptr<Veggie> > veggies;
-    veggies.push_back(std::unique_ptr<Veggie>(new BlackOlives()));
-    veggies.push_back(std::unique_ptr<Veggie>(new EggPlant()));
-    veggies.push_back(std::unique_ptr<Veggie>(new Spinach()));
+    veggies.emplace_back(new BlackOlives());
+    veggies.emplace_back(new EggPlant());
+    veggies.emplace_back(new Spinach());
     return veggies;
   }
 
@@ -272,8 +303,8 @@ public:
   }
 
   std::string toString() {
-    return getCheese()->toString() + " pizza on " + getDough()->toString() +
-      " with " + getSauce()->toString();
+    return std::string("The pizza is a ") + getCheese()->toString() + std::string(" pizza on ") +
+    getDough()->toString() + std::string(" with ") + getSauce()->toString();
   }
   
 private:
@@ -286,11 +317,16 @@ public:
 
   void prepare() {
     std::cout << "Preparing " << getName() << std::endl;
+    setDough(ingredientFactory->createDough());
+    setSauce(ingredientFactory->createSauce());
+    setCheese(ingredientFactory->createCheese());
+    setPepperoni(ingredientFactory->createPepperoni());
   }
 
   std::string toString() {
-    return getPepperoni()->toString() + " pizza on " + getDough()->toString() +
-      " with " + getSauce()->toString();
+    return std::string("The pizza is a ") + getPepperoni()->toString() +
+      std::string(" pizza on ") + getDough()->toString() + std::string(" with ") +
+      getSauce()->toString() + std::string(" and ") + getCheese()->toString();
   }
 
 private:
@@ -310,8 +346,9 @@ public:
   }
 
   std::string toString() {
-    return getClams()->toString() + " pizza on " + getDough()->toString() +
-      " with " + getSauce()->toString() " and " + getCheese()->toString();
+    return std::string("The pizza is a ") + getClams()->toString() + std::string(" pizza on ") +
+    getDough()->toString() +  std::string(" with ") + getSauce()->toString() +
+    std::string(" and ") + getCheese()->toString();
   }
 
 private:
@@ -324,11 +361,17 @@ public:
 
   void prepare() {
     std::cout << "Preparing " << getName() << std::endl;
+    setDough(ingredientFactory->createDough());
+    setSauce(ingredientFactory->createSauce());
+    setVeggies(ingredientFactory->createVeggies());
   }
 
   std::string toString() {
-    std::string str = "Veggie pizza on " + getDough()->toString() +
-      " with " + getSauce()->toString() + ", " + getCheese()->toString();
+    std::string str = std::string("The pizza is a veggie pizza on ") + getDough()->toString() +
+      std::string(" with ") + getSauce()->toString();
+    for(auto& veggie : getVeggies()) {
+      str += std::string(", ") + veggie->toString();
+    }
     return str;
   }
 
@@ -397,6 +440,14 @@ private:
 
 int main() {
   auto nyPizzaStore = std::unique_ptr<PizzaStore>(new NYPizzaStore());
-  nyPizzaStore->orderPizza("cheese");
+  auto nyCheesePizza = nyPizzaStore->orderPizza("cheese");
+  std::cout << nyCheesePizza->toString() << std::endl;
+
+  auto nyVeggiePizza = nyPizzaStore->orderPizza("veggie");
+  std::cout << nyVeggiePizza->toString() << std::endl;
+
+  auto chicagoPizzaStore = std::unique_ptr<PizzaStore>(new ChicagoPizzaStore());
+  auto chicagoClamPizza = chicagoPizzaStore->orderPizza("clam");
+  std::cout << chicagoClamPizza->toString() << std::endl;
   return 0;
 }
