@@ -10,7 +10,7 @@
 
 class Ingredient {
 public:
-  Ingredient(const std::string& str) : name(str) {}
+  Ingredient(const std::) : name(str) {}
   
   virtual ~Ingredient() {};
   
@@ -127,39 +127,59 @@ public:
     printf("Place pizza in official PizzaStore box\n");
   }
 
+  std::string getName() {
+    return name;
+  }
+
   void setName(const std::string& name) {
     this->name = name;
   }
 
+  Dough* getDough() {
+    return dough.get();
+  }
+
   void setDough(Dough* dough) {
-    this->dough = dough;
+    this->dough = std::unique_ptr<Dough>(dough);
+  }
+
+  Sauce* getSauce() {
+    return sauce.get();
   }
 
   void setSauce(Sauce* sauce) {
     this->sauce = std::unique_ptr<Sauce>(sauce);
   }
 
+  Cheese* getCheese() {
+    return cheese.get();
+  }
+
   void setCheese(Cheese* cheese) {
     this->cheese = std::unique_ptr<Cheese>(cheese);
+  }
+
+  Pepperoni* getPepperoni() {
+    return pepperoni.get();
   }
 
   void setPepperoni(Pepperoni* pepperoni) {
     this->pepperoni = std::unique_ptr<Pepperoni>(pepperoni);
   }
 
+  Clams* getClams() {
+    return clams.get();
+  }
+
   void setClams(Clams* clams) {
     this->clams = std::unique_ptr<Clams>(clams);
   }
 
-  std::string getName() {
-    return name;
-  }
-
-protected:
-  Dough* dough;
+  virtual void toString() = 0;
 
 private:
   std::string name;
+  std::unique_ptr<Dough> dough;
   std::unique_ptr<Sauce> sauce;
   std::vector<std::unique_ptr<Veggie> > veggies;
   std::unique_ptr<Cheese> cheese;
@@ -169,17 +189,17 @@ private:
 
 class PizzaIngredientFactory {
 public:
-  virtual Dough* createDough() {}
-  virtual Sauce* createSauce() {}
-  virtual Cheese* createCheese() {}
+  virtual Dough* createDough() = 0;
+  virtual Sauce* createSauce() = 0;
+  virtual Cheese* createCheese() = 0;
   virtual std::vector<std::unique_ptr<Veggie> > createVeggies() = 0;
   virtual Pepperoni* createPepperoni() = 0;
-  virtual Clams* createClams() {}
+  virtual Clams* createClams() = 0;
 };
 
 class NYPizzaIngredientFactory : public PizzaIngredientFactory {
 public:
-  virtual Dough* createDough() {
+  Dough* createDough() {
     return new ThinCrustDough();
   }
 
@@ -242,67 +262,78 @@ public:
   
 class CheesePizza : public Pizza {
 public:
-  CheesePizza(PizzaIngredientFactory* ingredientFactory) {
-    this->ingredientFactory = ingredientFactory;
-  }
+  CheesePizza(PizzaIngredientFactory* ingredientFactory) : ingredientFactory(ingredientFactory) {}
 
   void prepare() {
-    printf("Preparing %s\n", getName().c_str());
-    dough = ingredientFactory->createDough();
-    std::cout << ingredientFactory << std::endl;
+    std::cout << "Preparing " << getName() << std::endl;
+    setDough(ingredientFactory->createDough());
     setSauce(ingredientFactory->createSauce());
     setCheese(ingredientFactory->createCheese());
-    std::cout << ingredientFactory << std::endl;
+  }
+
+  std::string toString() {
+    return getCheese()->toString() + " pizza on " + getDough()->toString() +
+      " with " + getSauce()->toString();
   }
   
 private:
-  PizzaIngredientFactory* ingredientFactory;
+  std::unique_ptr<PizzaIngredientFactory> ingredientFactory;
 };
 
 class PepperoniPizza : public Pizza {
 public:
-  PepperoniPizza(PizzaIngredientFactory* ingredientFactory) {
-    this->ingredientFactory = ingredientFactory;
-  }
+  PepperoniPizza(PizzaIngredientFactory* ingredientFactory) : ingredientFactory(ingredientFactory) {}
 
   void prepare() {
-    printf("Preparing %s\n", getName().c_str());
+    std::cout << "Preparing " << getName() << std::endl;
+  }
+
+  std::string toString() {
+    return getPepperoni()->toString() + " pizza on " + getDough()->toString() +
+      " with " + getSauce()->toString();
   }
 
 private:
-  PizzaIngredientFactory* ingredientFactory;
+  std::unique_ptr<PizzaIngredientFactory> ingredientFactory;
 };
 
 class ClamPizza : public Pizza {
 public:
-  ClamPizza(PizzaIngredientFactory* ingredientFactory) {
-    this->ingredientFactory = ingredientFactory;
-  };
+  ClamPizza(PizzaIngredientFactory* ingredientFactory) : ingredientFactory(ingredientFactory) {}
 
   void prepare() {
-    printf("Preparing %s\n", getName().c_str());
+    std::cout << "Preparing " << getName() << std::endl;
     setDough(ingredientFactory->createDough());
     setSauce(ingredientFactory->createSauce());
     setCheese(ingredientFactory->createCheese());
     setClams(ingredientFactory->createClams());
   }
 
+  std::string toString() {
+    return getClams()->toString() + " pizza on " + getDough()->toString() +
+      " with " + getSauce()->toString() " and " + getCheese()->toString();
+  }
+
 private:
-  PizzaIngredientFactory* ingredientFactory;
+  std::unique_ptr<PizzaIngredientFactory> ingredientFactory;
 };
 
 class VeggiePizza : public Pizza {
 public:
-  VeggiePizza(PizzaIngredientFactory* ingredientFactory) {
-    this->ingredientFactory = ingredientFactory;
-  }
+  VeggiePizza(PizzaIngredientFactory* ingredientFactory) : ingredientFactory(ingredientFactory) {}
 
   void prepare() {
-    printf("Preparing %s\n", getName().c_str());
+    std::cout << "Preparing " << getName() << std::endl;
+  }
+
+  std::string toString() {
+    std::string str = "Veggie pizza on " + getDough()->toString() +
+      " with " + getSauce()->toString() + ", " + getCheese()->toString();
+    return str;
   }
 
 private:
-  PizzaIngredientFactory* ingredientFactory;
+  std::unique_ptr<PizzaIngredientFactory> ingredientFactory;
 };
 
 
@@ -324,18 +355,18 @@ class NYPizzaStore : public PizzaStore {
 private:
   Pizza* createPizza(const std::string& type) {
     Pizza* pizza = nullptr;
-    auto ingredientFactory = std::shared_ptr<PizzaIngredientFactory>(new NYPizzaIngredientFactory());
+    auto ingredientFactory = new NYPizzaIngredientFactory();
     if(type == "cheese") {
-      pizza = new CheesePizza(ingredientFactory.get());
+      pizza = new CheesePizza(ingredientFactory);
       pizza->setName("New York Style Cheese Pizza");
     } else if(type == "veggie") {
-      pizza = new VeggiePizza(ingredientFactory.get());
+      pizza = new VeggiePizza(ingredientFactory);
       pizza->setName("New York Style Veggie Pizza");
     } else if(type == "clam") {
-      pizza = new ClamPizza(ingredientFactory.get());
+      pizza = new ClamPizza(ingredientFactory);
       pizza->setName("New York Style Clam Pizza");
     } else if(type == "pepperoni") {
-      pizza = new PepperoniPizza(ingredientFactory.get());
+      pizza = new PepperoniPizza(ingredientFactory);
       pizza->setName("New York Style Pepperoni Pizza");
     }
     return pizza;
@@ -346,18 +377,18 @@ class ChicagoPizzaStore : public PizzaStore {
 private:
   Pizza* createPizza(const std::string& type) {
     Pizza* pizza = nullptr;
-    auto ingredientFactory = std::shared_ptr<PizzaIngredientFactory>(new ChicagoPizzaIngredientFactory());
+    auto ingredientFactory = new ChicagoPizzaIngredientFactory();
     if(type == "cheese") {
-      pizza = new CheesePizza(ingredientFactory.get());
+      pizza = new CheesePizza(ingredientFactory);
       pizza->setName("Chicago Style Cheese Pizza");
     } else if(type == "veggie") {
-      pizza = new VeggiePizza(ingredientFactory.get());
+      pizza = new VeggiePizza(ingredientFactory);
       pizza->setName("Chicago Style Veggie Pizza");
     } else if(type == "clam") {
-      pizza = new ClamPizza(ingredientFactory.get());
+      pizza = new ClamPizza(ingredientFactory);
       pizza->setName("Chicago Style Clam Pizza");
     } else if(type == "pepperoni") {
-      pizza = new PepperoniPizza(ingredientFactory.get());
+      pizza = new PepperoniPizza(ingredientFactory);
       pizza->setName("Chicago Style Pepperoni Pizza");
     }
     return pizza;
